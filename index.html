@@ -116,13 +116,6 @@
             }
         }
 
-        /* 首页面左右留白，避免被换页按钮覆盖 */
-        #page-home .content-wrapper { padding: 0 56px; box-sizing: border-box; }
-        @media (max-width: 768px) { #page-home .content-wrapper { padding: 0 48px; } }
-        /* 第二页整体左右留白（给“窗口”本身加边距），避免被换页按钮覆盖 */
-        #page-status .panel { width: calc(100% - 112px); margin: 0 56px; }
-        @media (max-width: 768px) { #page-status .panel { width: calc(100% - 96px); margin: 0 48px; } }
-
         /* 分页容器（两页左右切换） */
         .pages {
             position: fixed;
@@ -197,6 +190,9 @@
             padding: 12px 18px;
             overflow: auto;
         }
+        .panel-body, .item {
+            font-size: 22px;
+        }
         .status-bar {
             display: flex;
             justify-content: space-between;
@@ -216,9 +212,9 @@
         .panel.dark .list { border-color: rgba(255,255,255,0.12); }
         .item {
             display: grid;
-            grid-template-columns: 140px 120px 1fr;
-            gap: 12px;
-            padding: 10px 12px;
+            grid-template-columns: auto auto auto;
+            gap: 0;
+            padding: 16px 16px;
             background: rgba(255,255,255,0.65);
             border-bottom: 1px solid rgba(0,0,0,0.06);
         }
@@ -226,9 +222,9 @@
         .item:last-child { border-bottom: none; }
         .type-pill {
             display: inline-block;
-            padding: 2px 8px;
+            padding: 2px 12px;
             border-radius: 999px;
-            font-size: 12px;
+            font-size: 20px;
             background: rgba(0,0,0,0.06);
         }
         .panel.dark .type-pill { background: rgba(255,255,255,0.12); }
@@ -272,6 +268,40 @@
         .dark-mode .icon-btn:hover { background: rgba(255,255,255,0.12); }
         /* 深色模式下弹窗按钮外观与第二页按钮一致 */
         .dark-mode .modal-panel .btn { border-color: rgba(255,255,255,0.22); background: rgba(39,57,77,0.85); color: #ddd; }
+        .indicator-bar {
+            position: fixed;
+            left: 50%;
+            bottom: 40px;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 15;
+        }
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #bbb;
+            transition: background 0.3s;
+            display: inline-block;
+        }
+        .dot.active {
+            background: linear-gradient(135deg,#43e6c6,#39c5bb 70%,#278ea5);
+            box-shadow: 0 2px 8px #39c5bb55;
+        }
+        .dark-mode .dot {
+            background: #444;
+        }
+        .dark-mode .dot.active {
+            background: linear-gradient(135deg,#d7b200,#ffd700 70%,#cab32c);
+            box-shadow: 0 2px 8px #ffd70066;
+        }
+        #page-status .panel {
+            font-size: 22px;
+        }
+        #page-status .item {
+            font-size: 20px;
+        }
     </style>
     <link id="font-link" rel="stylesheet">
     <link id="cdn-link" rel="stylesheet">
@@ -324,8 +354,11 @@
                 </div>
             </section>
         </div>
-        <button class="nav-btn nav-left" onclick="goLeft()">←</button>
-        <button class="nav-btn nav-right" onclick="goRight()">→</button>
+        <!-- 新增页面状态指示器 -->
+        <div class="indicator-bar" id="indicatorBar">
+            <span class="dot" id="dot0"></span>
+            <span class="dot" id="dot1"></span>
+        </div>
     </div>
     <div class="footer" style="z-index:20;">&copy; 2025 RiseForever. Based on <a href="https://github.com/ScDuckXu/SntroPage" target="_blank">SntroPage</a>.</div>
     <!-- 标题弹窗 -->
@@ -337,7 +370,7 @@
             </div>
             <div class="modal-body" id="titleModalBody"></div>
             <div class="modal-actions">
-                <button class="btn" onclick="closeTitleModal()">已阅</button>
+                <button class="btn" onclick="closeTitleModal()">知道了</button>
             </div>
         </div>
     </div>
@@ -452,26 +485,57 @@
         function updateSlide() {
             const slides = document.getElementById('slides');
             slides.style.transform = `translate3d(-${currentSlide * 100}vw, 0, 0)`;
+            // 页面指示点切换
+            document.getElementById('dot0').classList.toggle('active', currentSlide === 0);
+            document.getElementById('dot1').classList.toggle('active', currentSlide === 1);
         }
         function bindSwipe(el) {
-            let startX = 0, deltaX = 0, touching = false;
-            el.addEventListener('touchstart', (e) => { touching = true; startX = e.touches[0].clientX; });
-            el.addEventListener('touchmove', (e) => { if (!touching) return; deltaX = e.touches[0].clientX - startX; });
+            let startX = 0, lastX = 0, deltaX = 0, touching = false;
+            const slides = document.getElementById('slides');
+            el.addEventListener('touchstart', (e) => {
+                touching = true;
+                startX = lastX = e.touches[0].clientX;
+                slides.style.transition = 'none';
+            });
+            el.addEventListener('touchmove', (e) => {
+                if (!touching) return;
+                lastX = e.touches[0].clientX;
+                deltaX = lastX - startX;
+                slides.style.transform = `translate3d(${deltaX - currentSlide * window.innerWidth}px, 0, 0)`;
+            });
             el.addEventListener('touchend', () => {
-                if (!touching) return; touching = false;
-                if (deltaX < -50) goRight(); else if (deltaX > 50) goLeft();
+                if (!touching) return;
+                touching = false;
+                slides.style.transition = '';
+                if (deltaX < -window.innerWidth/4) { currentSlide = Math.min(1, currentSlide + 1); }
+                else if (deltaX > window.innerWidth/4) { currentSlide = Math.max(0, currentSlide - 1); }
+                updateSlide();
                 deltaX = 0;
             });
         }
 
         // 鼠标/触控板拖拽支持
         function bindPointerSwipe(el) {
-            let startX = 0, deltaX = 0, down = false;
-            el.addEventListener('mousedown', (e) => { down = true; startX = e.clientX; });
-            window.addEventListener('mousemove', (e) => { if (!down) return; deltaX = e.clientX - startX; });
+            let startX = 0, lastX = 0, deltaX = 0, down = false;
+            const slides = document.getElementById('slides');
+            el.addEventListener('mousedown', (e) => {
+                down = true;
+                startX = lastX = e.clientX;
+                slides.style.transition = 'none';
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (!down) return;
+                lastX = e.clientX;
+                deltaX = lastX - startX;
+                slides.style.transform = `translate3d(${deltaX - currentSlide * window.innerWidth}px, 0, 0)`;
+            });
             window.addEventListener('mouseup', () => {
-                if (!down) return; down = false;
-                if (deltaX < -50) goRight(); else if (deltaX > 50) goLeft();
+                if (!down) return;
+                down = false;
+                slides.style.transition = '';
+                if (deltaX < -window.innerWidth/4) { currentSlide = Math.min(1, currentSlide + 1); }
+                else if (deltaX > window.innerWidth/4) { currentSlide = Math.max(0, currentSlide - 1); }
+                updateSlide();
                 deltaX = 0;
             });
         }
@@ -526,11 +590,8 @@
                 titleDiv.className = 'nowrap';
                 const titleSpan = document.createElement('span');
                 titleSpan.className = 'title-link';
-                const isMobile = window.innerWidth <= 768;
-                const maxLen = isMobile ? 14 : 28;
                 const fullTitle = d.windowTitle || '-';
-                const displayTitle = fullTitle.length > maxLen ? (fullTitle.slice(0, maxLen) + '…') : fullTitle;
-                titleSpan.textContent = displayTitle;
+                titleSpan.textContent = fullTitle;
                 titleSpan.title = fullTitle;
                 titleSpan.addEventListener('click', () => openTitleModal(d.name || '', fullTitle));
                 titleDiv.appendChild(titleSpan);
