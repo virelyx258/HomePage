@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hi, I'm RiseForever.</title>
     <style>
+        html, body, * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        img {
+            -webkit-user-drag: none;
+            user-drag: none;
+        }
         body {
             margin: 0;
             font-family: "Lora", serif;
@@ -62,7 +72,7 @@
         }
 
         .toggle-mode {
-            position: absolute;
+            position: fixed;
             top: 20px;
             right: 20px;
             cursor: pointer;
@@ -70,6 +80,7 @@
             padding: 10px;
             border: none;
             background: none;
+            z-index: 30;
         }
 
         .dark-mode {
@@ -104,6 +115,163 @@
                 content: ".";
             }
         }
+
+        /* 首页面左右留白，避免被换页按钮覆盖 */
+        #page-home .content-wrapper { padding: 0 56px; box-sizing: border-box; }
+        @media (max-width: 768px) { #page-home .content-wrapper { padding: 0 48px; } }
+        /* 第二页整体左右留白（给“窗口”本身加边距），避免被换页按钮覆盖 */
+        #page-status .panel { width: calc(100% - 112px); margin: 0 56px; }
+        @media (max-width: 768px) { #page-status .panel { width: calc(100% - 96px); margin: 0 48px; } }
+
+        /* 分页容器（两页左右切换） */
+        .pages {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .slides {
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: flex;
+            width: 200vw;
+            height: 100%;
+            transition: transform .35s ease;
+        }
+        .page {
+            width: 100vw;
+            height: 100%;
+            flex: 0 0 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+        .nav-btn {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(0,0,0,0.15);
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 10;
+        }
+        .nav-left { left: 12px; }
+        .nav-right { right: 12px; }
+        .dark-mode .nav-btn { background: rgba(39,57,77,0.85); color: #ddd; border-color: rgba(255,255,255,0.22); }
+        .panel {
+            background: rgba(255,255,255,0.92);
+            color: #333;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 880px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .panel.dark {
+            background: rgba(27,39,53,0.95);
+            color: #ddd;
+        }
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            font-weight: bold;
+            font-size: 18px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+        .panel.dark .panel-header { border-bottom-color: rgba(255,255,255,0.12); }
+        .panel-body {
+            padding: 12px 18px;
+            overflow: auto;
+        }
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        .list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.08);
+        }
+        .panel.dark .list { border-color: rgba(255,255,255,0.12); }
+        .item {
+            display: grid;
+            grid-template-columns: 140px 120px 1fr;
+            gap: 12px;
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.65);
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+        }
+        .panel.dark .item { background: rgba(39,57,77,0.65); border-bottom-color: rgba(255,255,255,0.08); }
+        .item:last-child { border-bottom: none; }
+        .type-pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            background: rgba(0,0,0,0.06);
+        }
+        .panel.dark .type-pill { background: rgba(255,255,255,0.12); }
+        .muted { color: #666; font-size: 12px; }
+        .panel.dark .muted { color: #bbb; }
+        .nowrap { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .title-link { cursor: pointer; text-decoration: underline dotted; }
+        .panel.dark .title-link { color: #ddd; }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .pager {
+            display: flex;
+            gap: 8px;
+        }
+        .btn {
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.15);
+            background: rgba(255,255,255,0.75);
+            cursor: pointer;
+        }
+        .btn:disabled { opacity: .5; cursor: not-allowed; }
+        .panel.dark .btn { border-color: rgba(255,255,255,0.22); background: rgba(39,57,77,0.85); color: #ddd; }
+        
+        /* 自定义弹窗：与第二页窗口风格类似 */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+        .modal-overlay.active { display: flex; }
+        .modal-panel { background: rgba(255,255,255,0.95); color: #333; border-radius: 12px; width: min(90vw, 720px); max-height: 70vh; box-shadow: 0 6px 18px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; }
+        .dark-mode .modal-panel { background: rgba(27,39,53,0.95); color: #ddd; }
+        .modal-header { display:flex; align-items:center; justify-content: space-between; padding: 12px 16px; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.08); }
+        .dark-mode .modal-header { border-bottom-color: rgba(255,255,255,0.12); }
+        .modal-body { padding: 16px; overflow: auto; word-break: break-all; }
+        .modal-actions { display:flex; justify-content:flex-end; padding: 10px 16px; gap: 8px; border-top: 1px solid rgba(0,0,0,0.06); }
+        .dark-mode .modal-actions { border-top-color: rgba(255,255,255,0.12); }
+        .icon-btn { width: 32px; height: 32px; border: none; background: transparent; cursor: pointer; font-size: 20px; line-height: 32px; color: inherit; border-radius: 6px; }
+        .icon-btn:hover { background: rgba(0,0,0,0.06); }
+        .dark-mode .icon-btn:hover { background: rgba(255,255,255,0.12); }
+        /* 深色模式下弹窗按钮外观与第二页按钮一致 */
+        .dark-mode .modal-panel .btn { border-color: rgba(255,255,255,0.22); background: rgba(39,57,77,0.85); color: #ddd; }
     </style>
     <link id="font-link" rel="stylesheet">
     <link id="cdn-link" rel="stylesheet">
@@ -113,20 +281,65 @@
         <i id="mode-icon" class="fas fa-sun"></i>
     </button>
 
-    <div class="content-wrapper">
-        <div class="left-content">
-            <div id="third-line" class="subtext">Hi,there. Welcome!</div>
-            <div class="header">I'm RiseForever<span class="emoji">🐯</span></div>
-            <div class="subtext">Chinese · Student · Developer<br>
-                <a href="https://luming.cool" target="_blank">Blog </a> | <a href="https://github.com/virelyx258" target="_blank"> Github</a> | <a href="mailto:hi@riseforever.cn"> Email</a> | <a href="https://luming.cool/friends/" target="_blank"> Friends</a>
+    <!-- 分页容器 -->
+    <div class="pages" id="pages">
+        <div class="slides" id="slides">
+            <!-- 第1页：原个人主页 -->
+            <section class="page" id="page-home">
+                <div class="content-wrapper">
+                    <div class="left-content">
+                        <div id="third-line" class="subtext">Hi,there. Welcome!</div>
+                        <div class="header">I'm RiseForever<span class="emoji">🐯</span></div>
+                        <div class="subtext">Chinese · Student · Developer<br>
+                            <a href="https://luming.cool">Blog </a> | <a href="https://github.com/virelyx258"> Github</a> | <a href="mailto:hi@riseforever.cn"> Email</a>
+                        </div>
+                    </div>
+                    <div class="photo">
+                        <img src="https://cn.cravatar.com/avatar/302380667bdaf4e1390800e62494d4af?s=500&r=X" alt="Sample Photo">
+                    </div>
+                </div>
+            </section>
+
+            <!-- 第2页：设备状态视奸页 -->
+            <section class="page" id="page-status">
+                <div class="panel" id="panel">
+                    <div class="panel-header">
+                        <span>👁视奸我👁</span>
+                        <div class="muted">数据来自<a href="https://status.riseforever.cn" target="_blank">status.riseforever.cn</a></div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="status-bar">
+                            <div>总体状态：<span id="overall">-</span></div>
+                            <div class="muted" id="uptime">更新时间：-</div>
+                        </div>
+                        <ul class="list" id="deviceList"></ul>
+                        <div class="controls">
+                            <div class="muted">共 <span id="totalCount">0</span> 台设备，页码 <span id="pageInfo">1/1</span></div>
+                            <div class="pager">
+                                <button class="btn" id="prevBtn" onclick="gotoPrev()">上一页</button>
+                                <button class="btn" id="nextBtn" onclick="gotoNext()">下一页</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <button class="nav-btn nav-left" onclick="goLeft()">←</button>
+        <button class="nav-btn nav-right" onclick="goRight()">→</button>
+    </div>
+    <div class="footer" style="z-index:20;">&copy; 2025 RiseForever. Based on <a href="https://github.com/ScDuckXu/SntroPage" target="_blank">SntroPage</a>.</div>
+    <!-- 标题弹窗 -->
+    <div class="modal-overlay" id="titleModal">
+        <div class="modal-panel">
+            <div class="modal-header">
+                <span id="titleModalHeaderText"></span>
+                <button class="icon-btn" onclick="closeTitleModal()" aria-label="关闭">&times;</button>
+            </div>
+            <div class="modal-body" id="titleModalBody"></div>
+            <div class="modal-actions">
+                <button class="btn" onclick="closeTitleModal()">已阅</button>
             </div>
         </div>
-        <div class="photo">
-            <img src="https://cn.cravatar.com/avatar/302380667bdaf4e1390800e62494d4af?s=500&r=X" alt="Sample Photo">
-        </div>
-    </div>
-
-    <div class="footer">&copy; 2025 DuckXu.com.
     </div>
     <script>
         function fetchUserLocation() {
@@ -181,13 +394,173 @@
             const icon = document.getElementById('mode-icon');
             icon.classList.toggle('fa-sun');
             icon.classList.toggle('fa-moon');
+            // 保障面板样式同步（即便 MutationObserver 因浏览器差异未触发）
+            syncPanelTheme();
         }
 
         window.onload = function() {
             fetchUserLocation();
             detectColorScheme();
             setupColorSchemeListener();
+            initStatusView();
+            initPaging();
+            // 启动全局定时刷新（仅在状态页时执行刷新）
+            if (refreshTimer) clearInterval(refreshTimer);
+            refreshTimer = setInterval(() => { if (currentSlide === 1) refreshStatus(); }, 3000);
+            // 禁止图片拖动
+            document.querySelectorAll('img').forEach(img => img.setAttribute('draggable', 'false'));
+            document.addEventListener('dragstart', (e) => { if (e.target && e.target.tagName === 'IMG') e.preventDefault(); });
         };
+
+        // ===== 设备状态视图与分页 =====
+        const API_STATUS = 'https://status.riseforever.cn/api/status';
+        const PAGE_SIZE = 8;
+        let allDevices = [];
+        let currentPage = 1;
+        let refreshTimer = null;
+
+        function initStatusView() {
+            // 深色模式联动面板配色
+            const observer = new MutationObserver(() => syncPanelTheme());
+            observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+            syncPanelTheme();
+        }
+
+        function syncPanelTheme() {
+            const panel = document.getElementById('panel');
+            if (!panel) return;
+            if (document.body.classList.contains('dark-mode')) panel.classList.add('dark');
+            else panel.classList.remove('dark');
+        }
+
+        // ===== 左右分页逻辑（主页/视奸页） =====
+        let currentSlide = 0; // 0: 主页, 1: 视奸页
+        function initPaging() {
+            const slides = document.getElementById('slides');
+            // 进入页面默认展示主页，10s 自动刷新在切换到视奸页时启动
+            bindSwipe(slides);
+            bindPointerSwipe(slides);
+            syncPanelTheme();
+            updateSlide();
+        }
+        function goLeft() { currentSlide = Math.max(0, currentSlide - 1); onSlideChanged(); }
+        function goRight() { currentSlide = Math.min(1, currentSlide + 1); onSlideChanged(); }
+        function onSlideChanged() {
+            updateSlide();
+            if (currentSlide === 1) { refreshStatus(); }
+        }
+        function updateSlide() {
+            const slides = document.getElementById('slides');
+            slides.style.transform = `translate3d(-${currentSlide * 100}vw, 0, 0)`;
+        }
+        function bindSwipe(el) {
+            let startX = 0, deltaX = 0, touching = false;
+            el.addEventListener('touchstart', (e) => { touching = true; startX = e.touches[0].clientX; });
+            el.addEventListener('touchmove', (e) => { if (!touching) return; deltaX = e.touches[0].clientX - startX; });
+            el.addEventListener('touchend', () => {
+                if (!touching) return; touching = false;
+                if (deltaX < -50) goRight(); else if (deltaX > 50) goLeft();
+                deltaX = 0;
+            });
+        }
+
+        // 鼠标/触控板拖拽支持
+        function bindPointerSwipe(el) {
+            let startX = 0, deltaX = 0, down = false;
+            el.addEventListener('mousedown', (e) => { down = true; startX = e.clientX; });
+            window.addEventListener('mousemove', (e) => { if (!down) return; deltaX = e.clientX - startX; });
+            window.addEventListener('mouseup', () => {
+                if (!down) return; down = false;
+                if (deltaX < -50) goRight(); else if (deltaX > 50) goLeft();
+                deltaX = 0;
+            });
+        }
+
+        async function refreshStatus() {
+            try {
+                const res = await fetch(API_STATUS, { cache: 'no-store' });
+                const data = await res.json();
+                const { devices = [], status = 'offline', updateTime = '-' } = data || {};
+                allDevices = Array.isArray(devices) ? devices : [];
+                currentPage = 1;
+                renderOverall(status, updateTime, allDevices.length);
+                renderPage();
+            } catch (e) {
+                console.error('status fetch error', e);
+            }
+        }
+
+        function renderOverall(status, updateTime, total) {
+            document.getElementById('overall').textContent = status === 'online' ? '在线' : '离线';
+            document.getElementById('uptime').textContent = '更新时间：' + updateTime;
+            document.getElementById('totalCount').textContent = total;
+        }
+
+        function renderPage() {
+            const listEl = document.getElementById('deviceList');
+            listEl.innerHTML = '';
+            const total = allDevices.length;
+            const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+            currentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const pageItems = allDevices.slice(start, start + PAGE_SIZE);
+
+            pageItems.forEach(d => {
+                const li = document.createElement('li');
+                li.className = 'item';
+                const typeLabel = d.type === 'mobile' ? '📱 Mobile' : (d.type === 'pc' ? '💻 PC' : '❓ Unknown');
+
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'nowrap';
+                nameDiv.title = d.name || '';
+                nameDiv.textContent = d.name || '';
+
+                const typeDiv = document.createElement('div');
+                const pill = document.createElement('span');
+                pill.className = 'type-pill';
+                pill.textContent = typeLabel;
+                typeDiv.appendChild(pill);
+
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'nowrap';
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'title-link';
+                const isMobile = window.innerWidth <= 768;
+                const maxLen = isMobile ? 14 : 28;
+                const fullTitle = d.windowTitle || '-';
+                const displayTitle = fullTitle.length > maxLen ? (fullTitle.slice(0, maxLen) + '…') : fullTitle;
+                titleSpan.textContent = displayTitle;
+                titleSpan.title = fullTitle;
+                titleSpan.addEventListener('click', () => openTitleModal(d.name || '', fullTitle));
+                titleDiv.appendChild(titleSpan);
+
+                li.appendChild(nameDiv);
+                li.appendChild(typeDiv);
+                li.appendChild(titleDiv);
+                listEl.appendChild(li);
+            });
+
+            document.getElementById('pageInfo').textContent = `${currentPage}/${totalPages}`;
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        }
+
+        function gotoPrev() { currentPage -= 1; renderPage(); }
+        function gotoNext() { currentPage += 1; renderPage(); }
+
+        // ===== 自定义标题弹窗 =====
+        function openTitleModal(deviceName, text) {
+            const overlay = document.getElementById('titleModal');
+            const body = document.getElementById('titleModalBody');
+            const header = document.getElementById('titleModalHeaderText');
+            header.textContent = `${deviceName}正在干什么👁`;
+            body.textContent = text || '';
+            overlay.classList.add('active');
+        }
+        function closeTitleModal() {
+            document.getElementById('titleModal').classList.remove('active');
+        }
     </script>
 </body>
 </html>
