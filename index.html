@@ -284,6 +284,7 @@
             background: #bbb;
             transition: background 0.3s;
             display: inline-block;
+            cursor: pointer;
         }
         .dot.active {
             background: linear-gradient(135deg,#43e6c6,#39c5bb 70%,#278ea5);
@@ -321,7 +322,7 @@
                         <div id="third-line" class="subtext">Hi,there. Welcome!</div>
                         <div class="header">I'm RiseForever<span class="emoji">🐯</span></div>
                         <div class="subtext">Chinese · Student · Developer<br>
-                            <a href="https://luming.cool" target="_blank">Blog </a> | <a href="https://github.com/virelyx258" target="_blank"> Github</a> | <a href="mailto:hi@riseforever.cn"> Email</a>
+                            <a href="https://luming.cool">Blog </a> | <a href="https://github.com/virelyx258"> Github</a> | <a href="mailto:hi@riseforever.cn"> Email</a>
                         </div>
                     </div>
                     <div class="photo">
@@ -437,6 +438,8 @@
             setupColorSchemeListener();
             initStatusView();
             initPaging();
+            // 页面加载后立即刷新第二页设备列表
+            refreshStatus();
             // 启动全局定时刷新（仅在状态页时执行刷新）
             if (refreshTimer) clearInterval(refreshTimer);
             refreshTimer = setInterval(() => { if (currentSlide === 1) refreshStatus(); }, 3000);
@@ -475,6 +478,15 @@
             bindPointerSwipe(slides);
             syncPanelTheme();
             updateSlide();
+            // 为指示点添加点击换页功能
+            document.getElementById('dot0').addEventListener('click', () => {
+                currentSlide = 0;
+                onSlideChanged();
+            });
+            document.getElementById('dot1').addEventListener('click', () => {
+                currentSlide = 1;
+                onSlideChanged();
+            });
         }
         function goLeft() { currentSlide = Math.max(0, currentSlide - 1); onSlideChanged(); }
         function goRight() { currentSlide = Math.min(1, currentSlide + 1); onSlideChanged(); }
