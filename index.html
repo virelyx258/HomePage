@@ -377,7 +377,7 @@
     </div>
     <script>
         function fetchUserLocation() {
-            fetch('https://ipinfo.io/json')
+            fetch('https://ipinfo.io/json?token=8e59fc8a7b23ba')
                 .then(response => response.json())
                 .then(data => {
                     const country = data.country;
